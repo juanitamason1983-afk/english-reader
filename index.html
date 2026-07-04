@@ -1,0 +1,46 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Cici的单词点读库</title>
+    <style>
+        .container { display: flex; flex-wrap: wrap; gap: 20px; padding: 20px; }
+        .word-card { 
+            padding: 20px; background: #f0f8ff; border: 2px solid #007bff; 
+            border-radius: 12px; text-align: center; cursor: pointer; width: 120px;
+        }
+        .word { font-size: 20px; font-weight: bold; }
+    </style>
+</head>
+<body>
+
+<div class="container" id="app"></div>
+
+<script>
+    var words = [
+        { word: "apple", audio: "https://dict.youdao.com/dictvoice?audio=apple" },
+        { word: "banana", audio: "https://dict.youdao.com/dictvoice?audio=banana" }
+    ];
+
+    var container = document.getElementById('app');
+    var audioPlayer = new Audio();
+
+    for (var i = 0; i < words.length; i++) {
+        var item = words[i];
+        var div = document.createElement('div');
+        div.className = 'word-card';
+        div.innerHTML = '<div class="word">' + item.word + '</div>';
+        
+        // 使用闭包确保点击事件正确关联
+        (function(url) {
+            div.onclick = function() {
+                audioPlayer.src = url;
+                audioPlayer.play();
+            };
+        })(item.audio);
+        
+        container.appendChild(div);
+    }
+</script>
+</body>
+</html>
