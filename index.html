@@ -8,7 +8,7 @@
         .container { max-width: 800px; margin: auto; }
         .test-title { color: #333; border-bottom: 2px solid #007bff; padding-bottom: 5px; margin-top: 30px; }
         .part-title { color: #007bff; margin-top: 20px; margin-bottom: 10px; font-weight: bold; }
-        .word-grid { display: flex; flex-wrap: wrap; gap: 15px; }
+        .word-grid { display: flex; flex-wrap: wrap; gap: 15px; min-height: 20px; }
         
         .flip-card { background-color: transparent; width: 150px; height: 100px; perspective: 1000px; cursor: pointer; }
         .flip-card-inner { position: relative; width: 100%; height: 100%; text-align: center; transition: transform 0.6s; transform-style: preserve-3d; }
@@ -20,6 +20,7 @@
 </head>
 <body>
 <div class="container" id="app"></div>
+
 <script>
     var content = {
         "Test 1": {
@@ -44,18 +45,18 @@
             container.innerHTML += '<h3 class="part-title">' + partName + '</h3>';
             var grid = document.createElement('div');
             grid.className = 'word-grid';
+            container.appendChild(grid); // 先把 grid 加进去
             
             content[testName][partName].forEach(function(item) {
                 var card = document.createElement('div');
                 card.className = 'flip-card';
-                // 确保这里写入了完整的 HTML 结构，否则翻转和翻译都会失效
                 card.innerHTML = `
                     <div class="flip-card-inner">
                         <div class="flip-card-front">${item.word}</div>
                         <div class="flip-card-back">${item.meaning}</div>
                     </div>
                 `;
-                // 逻辑：点击触发翻转 + 发音
+                // 绑定点击事件到 card 本身
                 card.onclick = function() {
                     this.querySelector('.flip-card-inner').classList.toggle('flipped');
                     audioPlayer.src = item.audio;
@@ -63,7 +64,6 @@
                 };
                 grid.appendChild(card);
             });
-            container.appendChild(grid);
         }
     }
 </script>
