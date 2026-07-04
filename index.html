@@ -7,32 +7,28 @@
         body { font-family: sans-serif; padding: 20px; background-color: #f9f9f9; }
         .container { max-width: 800px; margin: auto; }
         .test-title { color: #333; border-bottom: 2px solid #007bff; padding-bottom: 5px; margin-top: 30px; }
-        .part-title { color: #007bff; margin-top: 20px; margin-bottom: 10px; font-weight: bold; }
+        .part-title { color: #007bff; margin-top: 20px; margin-bottom: 10px; font-weight: bold; font-size: 1.2em; }
         .word-grid { display: flex; flex-wrap: wrap; gap: 15px; }
 
         .flip-card { background-color: transparent; width: 150px; height: 100px; perspective: 1000px; cursor: pointer; }
         .flip-card-inner { position: relative; width: 100%; height: 100%; text-align: center; transition: transform 0.6s; transform-style: preserve-3d; }
         .flip-card-inner.flipped { transform: rotateY(180deg); }
-        
         .flip-card-front, .flip-card-back { position: absolute; width: 100%; height: 100%; backface-visibility: hidden; display: flex; align-items: center; justify-content: center; border-radius: 8px; border: 1px solid #ddd; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
         .flip-card-front { background: white; font-weight: bold; font-size: 18px; }
         .flip-card-back { background: #007bff; color: white; transform: rotateY(180deg); padding: 10px; font-size: 16px; }
-        
-        /* 翻译小图标样式 */
-        .translate-btn { position: absolute; top: 5px; right: 5px; font-size: 12px; color: #aaa; background: #eee; border-radius: 50%; width: 20px; height: 20px; display: flex; align-items: center; justify-content: center; }
-        .translate-btn:hover { color: #007bff; }
     </style>
 </head>
 <body>
-
 <div class="container" id="app"></div>
 
 <script>
+    // 你的数据结构，支持 Test 到 Part 6
     var content = {
-        "Test 3": {
-            "核心进阶单词": [
-                { "word": "recommend", "meaning": "推荐", "audio": "https://dict.youdao.com/dictvoice?audio=recommend" }
-            ]
+        "Test 1": {
+            "Part 1": [
+                { "word": "apple", "meaning": "苹果", "audio": "https://dict.youdao.com/dictvoice?audio=apple" }
+            ],
+            "Part 2": [], "Part 3": [], "Part 4": [], "Part 5": [], "Part 6": []
         }
     };
 
@@ -51,15 +47,13 @@
                 card.className = 'flip-card';
                 card.innerHTML = `
                     <div class="flip-card-inner">
-                        <div class="flip-card-front">
-                            ${item.word}
-                            <span class="translate-btn" onclick="event.stopPropagation(); this.closest('.flip-card-inner').classList.toggle('flipped')">中</span>
-                        </div>
+                        <div class="flip-card-front">${item.word}</div>
                         <div class="flip-card-back">${item.meaning}</div>
                     </div>
                 `;
-                // 卡片本体点击：播放音频
+                // 逻辑修复：点击卡片即翻转，同时发音
                 card.onclick = function() {
+                    this.querySelector('.flip-card-inner').classList.toggle('flipped');
                     audioPlayer.src = item.audio;
                     audioPlayer.play();
                 };
