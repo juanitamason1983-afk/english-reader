@@ -8,12 +8,15 @@
         .container { max-width: 800px; margin: auto; }
         .test-title { color: #333; border-bottom: 2px solid #007bff; padding-bottom: 5px; margin-top: 30px; }
         .part-title { color: #007bff; margin-top: 20px; margin-bottom: 10px; font-style: italic; }
-        .word-grid { display: flex; flex-wrap: wrap; gap: 10px; }
-        .word-card { 
-            padding: 15px 20px; background: white; border: 1px solid #ddd; 
-            border-radius: 8px; cursor: pointer; transition: 0.2s; box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-        }
-        .word-card:hover { background: #e7f1ff; border-color: #007bff; transform: translateY(-2px); }
+        .word-grid { display: flex; flex-wrap: wrap; gap: 15px; }
+
+        /* 翻转卡片核心样式 */
+        .flip-card { background-color: transparent; width: 150px; height: 100px; perspective: 1000px; cursor: pointer; }
+        .flip-card-inner { position: relative; width: 100%; height: 100%; text-align: center; transition: transform 0.6s; transform-style: preserve-3d; }
+        .flip-card:hover .flip-card-inner { transform: rotateY(180deg); }
+        .flip-card-front, .flip-card-back { position: absolute; width: 100%; height: 100%; backface-visibility: hidden; display: flex; align-items: center; justify-content: center; border-radius: 8px; border: 1px solid #ddd; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        .flip-card-front { background: white; font-weight: bold; font-size: 18px; }
+        .flip-card-back { background: #007bff; color: white; transform: rotateY(180deg); padding: 10px; font-size: 16px; }
     </style>
 </head>
 <body>
@@ -22,17 +25,16 @@
 
 <script>
     // ---------------------------------------------------------
-    // 你以后只需要修改这里的内容即可，添加新词就在方括号里加一行
+    // 更新内容时，只需在这里修改即可
     // ---------------------------------------------------------
     var content = {
-        "Test 1": {
-            "Part 1": [
-                { "word": "apple", "audio": "https://dict.youdao.com/dictvoice?audio=apple" },
-                { "word": "ant", "audio": "https://dict.youdao.com/dictvoice?audio=ant" }
+        "Test 3": {
+            "核心进阶单词": [
+                { "word": "recommend", "meaning": "推荐", "audio": "https://dict.youdao.com/dictvoice?audio=recommend" },
+                { "word": "suitable", "meaning": "合适的", "audio": "https://dict.youdao.com/dictvoice?audio=suitable" }
             ],
-            "Part 2": [
-                { "word": "banana", "audio": "https://dict.youdao.com/dictvoice?audio=banana" },
-                { "word": "ball", "audio": "https://dict.youdao.com/dictvoice?audio=ball" }
+            "重点词组": [
+                { "word": "hurry up", "meaning": "赶快", "audio": "https://dict.youdao.com/dictvoice?audio=hurry%20up" }
             ]
         }
     };
@@ -41,7 +43,6 @@
     var container = document.getElementById('app');
     var audioPlayer = new Audio();
 
-    // 渲染函数
     for (var testName in content) {
         var tTitle = document.createElement('h2');
         tTitle.className = 'test-title';
@@ -58,14 +59,19 @@
             grid.className = 'word-grid';
             
             content[testName][partName].forEach(function(item) {
-                var div = document.createElement('div');
-                div.className = 'word-card';
-                div.innerText = item.word;
-                div.onclick = function() {
+                var card = document.createElement('div');
+                card.className = 'flip-card';
+                card.innerHTML = `
+                    <div class="flip-card-inner">
+                        <div class="flip-card-front">${item.word}</div>
+                        <div class="flip-card-back">${item.meaning}</div>
+                    </div>
+                `;
+                card.onclick = function() {
                     audioPlayer.src = item.audio;
                     audioPlayer.play();
                 };
-                grid.appendChild(div);
+                grid.appendChild(card);
             });
             container.appendChild(grid);
         }
