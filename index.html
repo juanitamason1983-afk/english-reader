@@ -42,7 +42,6 @@
     <div class="container">
         <div class="tabs" id="tabs-container"></div>
         <div id="content-container"></div>
-        <audio id="global-audio"></audio>
     </div>
 
     <script>
@@ -65,7 +64,6 @@
             "Test 6": { "Part 1": [], "Part 2": [], "Part 3": [], "Part 4": [], "Part 5": [], "Part 6": [] }
         };
 
-        var globalAudio = document.getElementById('global-audio');
         var tabsContainer = document.getElementById('tabs-container');
         var contentContainer = document.getElementById('content-container');
         var isFirst = true;
@@ -75,13 +73,16 @@
             var tabBtn = document.createElement('button');
             tabBtn.className = 'tab-btn' + (isFirst ? ' active' : '');
             tabBtn.innerText = testName;
-            tabBtn.setAttribute('data-target', testName);
+            
+            // 安全处理 ID，避免特殊字符导致报错
+            var safeTestId = testName.replace(/\s+/g, '_');
+            tabBtn.setAttribute('data-target', safeTestId);
             tabsContainer.appendChild(tabBtn);
 
             // 2. 生成对应的 Test 内容区块
             var testSection = document.createElement('div');
             testSection.className = 'test-section' + (isFirst ? ' active' : '');
-            testSection.id = 'sec-' + testName;
+            testSection.id = 'sec-' + safeTestId;
 
             for (var partName in content[testName]) {
                 testSection.innerHTML += '<div class="part-title">' + partName + '</div>';
@@ -93,22 +94,16 @@
                     card.className = 'card';
                     card.innerHTML = '<div class="trans-btn">译</div><div>' + item.word + '</div><div class="meaning">' + item.meaning + '</div>';
 
-                    // 动作 1：点击卡片本体 -> 纯发音
+                    // 动作 1：点击卡片本体 -> 纯发音（使用确实验证过能发声的动态构建模式）
                     card.onclick = function() {
-                        globalAudio.src = item.audio;
-                        globalAudio.play().catch(function(e) { console.log(e); });
+                        var audio = new Audio(item.audio);
+                        audio.play().catch(function(e) { console.log(e); });
                     };
 
                     // 动作 2：点击右上角“译”字 -> 纯翻译，不发音
                     var transBtn = card.querySelector('.trans-btn');
-                    transBtn.onclick = function(e) {
-                        e = e || window.event;
-                        if (e.stopPropagation) {
-                            e.stopPropagation(); // 现代浏览器阻止冒泡
-                        } else {
-                            e.cancelBubble = true; // 老版本浏览器阻止冒泡
-                        }
-                        
+                    transBtn.onclick = function(event) {
+                        event.stopPropagation(); // 阻止点击事件向上冒泡触发卡片发音
                         var m = card.querySelector('.meaning');
                         m.style.display = (m.style.display === 'block') ? 'none' : 'block';
                     };
