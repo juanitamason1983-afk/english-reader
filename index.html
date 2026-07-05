@@ -22,7 +22,7 @@
         .part-title { color: #007bff; margin-top: 15px; margin-bottom: 10px; font-weight: bold; font-size: 1.2em; border-bottom: 1px dashed #eee; padding-bottom: 5px; }
         .word-grid { display: flex; flex-wrap: wrap; gap: 15px; padding: 10px 0 20px 0; }
 
-        /* 卡片样式（增加了 position: relative 以便放置小图标） */
+        /* 卡片样式 */
         .card { width: 140px; padding: 25px 10px 20px 10px; border: 2px solid #007bff; border-radius: 10px;
                 text-align: center; cursor: pointer; background: white; font-weight: bold; font-size: 18px;
                 box-shadow: 0 2px 5px rgba(0,0,0,0.1); user-select: none; position: relative; }
@@ -45,6 +45,35 @@
     </div>
 
     <script>
+        // ==========================================
+        // 核心修复1：将动作函数提取到最外层（全局），任何浏览器都能识别
+        // ==========================================
+        
+        // 播放发音功能
+        function playWord(event, audioUrl) {
+            var audio = new Audio(audioUrl);
+            audio.play();
+        }
+
+        // 翻转翻译功能
+        function toggleMeaning(event, btnElement) {
+            // 兼容老浏览器的拦截点击技术（点翻译不发音）
+            if (event && event.stopPropagation) {
+                event.stopPropagation();
+            } else if (window.event) {
+                window.event.cancelBubble = true;
+            }
+            
+            // 找到对应的中文，控制显示/隐藏
+            var card = btnElement.parentElement;
+            var m = card.querySelector('.meaning');
+            if (m) {
+                m.style.display = (m.style.display === 'block') ? 'none' : 'block';
+            }
+        }
+
+        // ==========================================
+
         var content = {
             "Test 1": {
                 "Part 1": [
@@ -73,8 +102,6 @@
             var tabBtn = document.createElement('button');
             tabBtn.className = 'tab-btn' + (isFirst ? ' active' : '');
             tabBtn.innerText = testName;
-            
-            // 安全处理 ID，避免特殊字符导致报错
             var safeTestId = testName.replace(/\s+/g, '_');
             tabBtn.setAttribute('data-target', safeTestId);
             tabsContainer.appendChild(tabBtn);
@@ -92,21 +119,14 @@
                 content[testName][partName].forEach(function(item) {
                     var card = document.createElement('div');
                     card.className = 'card';
-                    card.innerHTML = '<div class="trans-btn">译</div><div>' + item.word + '</div><div class="meaning">' + item.meaning + '</div>';
-
-                    // 动作 1：点击卡片本体 -> 纯发音（使用确实验证过能发声的动态构建模式）
-                    card.onclick = function() {
-                        var audio = new Audio(item.audio);
-                        audio.play().catch(function(e) { console.log(e); });
-                    };
-
-                    // 动作 2：点击右上角“译”字 -> 纯翻译，不发音
-                    var transBtn = card.querySelector('.trans-btn');
-                    transBtn.onclick = function(event) {
-                        event.stopPropagation(); // 阻止点击事件向上冒泡触发卡片发音
-                        var m = card.querySelector('.meaning');
-                        m.style.display = (m.style.display === 'block') ? 'none' : 'block';
-                    };
+                    
+                    // 核心修复2：直接把 onclick 写进 HTML 里！绝对不失效！
+                    card.setAttribute('onclick', "playWord(event, '" + item.audio + "')");
+                    
+                    card.innerHTML = 
+                        '<div class="trans-btn" onclick="toggleMeaning(event, this)">译</div>' + 
+                        '<div>' + item.word + '</div>' + 
+                        '<div class="meaning">' + item.meaning + '</div>';
 
                     grid.appendChild(card);
                 });
