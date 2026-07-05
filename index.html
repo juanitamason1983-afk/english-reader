@@ -22,12 +22,20 @@
         .part-title { color: #007bff; margin-top: 15px; margin-bottom: 10px; font-weight: bold; font-size: 1.2em; border-bottom: 1px dashed #eee; padding-bottom: 5px; }
         .word-grid { display: flex; flex-wrap: wrap; gap: 15px; padding: 10px 0 20px 0; }
 
-        /* 卡片样式 */
-        .card { width: 140px; padding: 20px 10px; border: 2px solid #007bff; border-radius: 10px;
+        /* 卡片样式（增加了 position: relative 以便放置小图标） */
+        .card { width: 140px; padding: 25px 10px 20px 10px; border: 2px solid #007bff; border-radius: 10px;
                 text-align: center; cursor: pointer; background: white; font-weight: bold; font-size: 18px;
-                box-shadow: 0 2px 5px rgba(0,0,0,0.1); user-select: none; }
+                box-shadow: 0 2px 5px rgba(0,0,0,0.1); user-select: none; position: relative; }
         .card:active { transform: scale(0.95); }
+        
+        /* 中文释义样式 */
         .meaning { color: #d9534f; font-size: 15px; margin-top: 8px; display: none; font-weight: normal; }
+
+        /* “译”字小图标样式 */
+        .trans-btn { position: absolute; top: 5px; right: 5px; font-size: 12px; color: #888; background: #f0f0f0; 
+                     border-radius: 50%; width: 22px; height: 22px; display: flex; align-items: center; 
+                     justify-content: center; font-weight: normal; transition: 0.2s; z-index: 10; }
+        .trans-btn:hover { background: #007bff; color: white; }
     </style>
 </head>
 <body>
@@ -56,14 +64,11 @@
             "Test 6": { "Part 1": [], "Part 2": [], "Part 3": [], "Part 4": [], "Part 5": [], "Part 6": [] }
         };
 
-        // 【发音修复】：恢复你之前测试成功的、全局唯一的发音引擎
         var audioPlayer = new Audio(); 
-        
         var tabsContainer = document.getElementById('tabs-container');
         var contentContainer = document.getElementById('content-container');
         var isFirst = true;
 
-        // 遍历生成界面
         for (var testName in content) {
             // 1. 生成横向 Tab 按钮
             var tabBtn = document.createElement('button');
@@ -85,19 +90,26 @@
                 content[testName][partName].forEach(function(item) {
                     var card = document.createElement('div');
                     card.className = 'card';
-                    card.innerHTML = '<div>' + item.word + '</div><div class="meaning">' + item.meaning + '</div>';
+                    // 加入了 trans-btn 元素
+                    card.innerHTML = '<div class="trans-btn">译</div><div>' + item.word + '</div><div class="meaning">' + item.meaning + '</div>';
 
-                    // 绑定点击事件：发音 + 显示中文
+                    // 动作 1：点击卡片本体 -> 纯发音
                     card.onclick = function() {
                         audioPlayer.src = item.audio;
                         var playPromise = audioPlayer.play();
                         if (playPromise !== undefined) {
                             playPromise.catch(function(e) { console.log(e); });
                         }
-                        
-                        var m = this.querySelector('.meaning');
+                    };
+
+                    // 动作 2：点击右上角“译”字 -> 纯翻译，不发音
+                    var transBtn = card.querySelector('.trans-btn');
+                    transBtn.onclick = function(event) {
+                        event.stopPropagation(); // 核心：拦截点击事件，防止触发卡片外层的发音
+                        var m = card.querySelector('.meaning');
                         m.style.display = (m.style.display === 'block') ? 'none' : 'block';
                     };
+
                     grid.appendChild(card);
                 });
                 testSection.appendChild(grid);
@@ -112,11 +124,9 @@
 
         allTabs.forEach(function(btn) {
             btn.onclick = function() {
-                // 清除所有高亮和显示状态
                 allTabs.forEach(function(t) { t.classList.remove('active'); });
                 allSections.forEach(function(s) { s.classList.remove('active'); });
 
-                // 激活被点击的项
                 this.classList.add('active');
                 document.getElementById('sec-' + this.getAttribute('data-target')).classList.add('active');
             };
