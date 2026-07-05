@@ -64,7 +64,6 @@
             "Test 6": { "Part 1": [], "Part 2": [], "Part 3": [], "Part 4": [], "Part 5": [], "Part 6": [] }
         };
 
-        var audioPlayer = new Audio(); 
         var tabsContainer = document.getElementById('tabs-container');
         var contentContainer = document.getElementById('content-container');
         var isFirst = true;
@@ -90,22 +89,18 @@
                 content[testName][partName].forEach(function(item) {
                     var card = document.createElement('div');
                     card.className = 'card';
-                    // 加入了 trans-btn 元素
                     card.innerHTML = '<div class="trans-btn">译</div><div>' + item.word + '</div><div class="meaning">' + item.meaning + '</div>';
 
-                    // 动作 1：点击卡片本体 -> 纯发音
+                    // 动作 1：点击卡片本体 -> 纯发音（使用最稳健的独立 Audio 对象写法）
                     card.onclick = function() {
-                        audioPlayer.src = item.audio;
-                        var playPromise = audioPlayer.play();
-                        if (playPromise !== undefined) {
-                            playPromise.catch(function(e) { console.log(e); });
-                        }
+                        var audio = new Audio(item.audio);
+                        audio.play().catch(function(e) { console.log(e); });
                     };
 
                     // 动作 2：点击右上角“译”字 -> 纯翻译，不发音
                     var transBtn = card.querySelector('.trans-btn');
                     transBtn.onclick = function(event) {
-                        event.stopPropagation(); // 核心：拦截点击事件，防止触发卡片外层的发音
+                        event.stopPropagation(); // 阻止点击事件传递给底层卡片
                         var m = card.querySelector('.meaning');
                         m.style.display = (m.style.display === 'block') ? 'none' : 'block';
                     };
