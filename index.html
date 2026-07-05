@@ -1,45 +1,68 @@
 <!DOCTYPE html>
-<html>
+<html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
     <title>Cici的点读库</title>
     <style>
-        .word-grid { display: flex; flex-wrap: wrap; gap: 10px; padding: 20px; }
-        .card { width: 150px; padding: 20px; border: 2px solid #007bff; border-radius: 10px; 
-                text-align: center; cursor: pointer; background: white; font-weight: bold; }
-        .meaning { color: #555; font-size: 14px; margin-top: 5px; display: none; }
+        body { font-family: sans-serif; padding: 20px; background-color: #f9f9f9; }
+        .container { max-width: 800px; margin: auto; }
+        .test-title { color: #333; border-bottom: 2px solid #007bff; padding-bottom: 5px; margin-top: 40px; }
+        .part-title { color: #007bff; margin-top: 20px; margin-bottom: 10px; font-weight: bold; font-size: 1.2em; }
+        .word-grid { display: flex; flex-wrap: wrap; gap: 15px; padding: 10px 0; min-height: 10px; }
+        
+        /* 卡片样式优化，增加点击时的缩放反馈 */
+        .card { width: 140px; padding: 20px 10px; border: 2px solid #007bff; border-radius: 10px; 
+                text-align: center; cursor: pointer; background: white; font-weight: bold; font-size: 18px; 
+                box-shadow: 0 2px 5px rgba(0,0,0,0.1); transition: transform 0.1s; user-select: none; }
+        .card:active { transform: scale(0.95); } /* 点击时稍微变小，手感更好 */
+        
+        /* 中文释义样式 */
+        .meaning { color: #d9534f; font-size: 15px; margin-top: 8px; display: none; font-weight: normal; }
     </style>
 </head>
 <body>
-    <div id="app"></div>
+    <div class="container" id="app"></div>
     <script>
-        // 使用 https 协议的音频源以避免被浏览器拦截
+        // ==========================================
+        // 完整数据结构：Test 1 到 Test 6，每个含 Part 1-6
+        // ==========================================
         var content = {
             "Test 1": {
                 "Part 1": [
-                    { "word": "recommend", "meaning": "推荐", "audio": "https://dict.youdao.com/dictvoice?audio=recommend&type=2" }
-                ]
-            }
+                    { "word": "recommend", "meaning": "推荐,建议", "audio": "https://dict.youdao.com/dictvoice?audio=recommend&type=2" },
+                    { "word": "suitable", "meaning": "合适的,适宜的", "audio": "https://dict.youdao.com/dictvoice?audio=suitable&type=2" },
+                    { "word": "directly", "meaning": "直接地", "audio": "https://dict.youdao.com/dictvoice?audio=directly&type=2" }
+                ],
+                "Part 2": [
+                    { "word": "session", "meaning": "一场,一节", "audio": "https://dict.youdao.com/dictvoice?audio=session&type=2" }
+                ],
+                "Part 3": [], "Part 4": [], "Part 5": [], "Part 6": []
+            },
+            "Test 2": { "Part 1": [], "Part 2": [], "Part 3": [], "Part 4": [], "Part 5": [], "Part 6": [] },
+            "Test 3": { "Part 1": [], "Part 2": [], "Part 3": [], "Part 4": [], "Part 5": [], "Part 6": [] },
+            "Test 4": { "Part 1": [], "Part 2": [], "Part 3": [], "Part 4": [], "Part 5": [], "Part 6": [] },
+            "Test 5": { "Part 1": [], "Part 2": [], "Part 3": [], "Part 4": [], "Part 5": [], "Part 6": [] },
+            "Test 6": { "Part 1": [], "Part 2": [], "Part 3": [], "Part 4": [], "Part 5": [], "Part 6": [] }
         };
 
         var app = document.getElementById('app');
         for (var t in content) {
-            app.innerHTML += '<h1>' + t + '</h1>';
+            app.innerHTML += '<h2 class="test-title">' + t + '</h2>';
             for (var p in content[t]) {
-                app.innerHTML += '<h3>' + p + '</h3>';
+                app.innerHTML += '<h3 class="part-title">' + p + '</h3>';
                 var grid = document.createElement('div');
                 grid.className = 'word-grid';
+                
                 content[t][p].forEach(function(item) {
                     var div = document.createElement('div');
                     div.className = 'card';
                     div.innerHTML = '<div>' + item.word + '</div><div class="meaning">' + item.meaning + '</div>';
                     
+                    // 核心成功逻辑：发音 + 切换中文显示
                     div.onclick = function() {
-                        // 1. 播放音频
                         var audio = new Audio(item.audio);
                         audio.play().catch(function(e) { console.error("播放被拦截", e); });
                         
-                        // 2. 显示中文释义
                         var m = this.querySelector('.meaning');
                         m.style.display = (m.style.display === 'block') ? 'none' : 'block';
                     };
