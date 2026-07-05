@@ -5,27 +5,38 @@
     <title>Cici的点读库</title>
     <style>
         body { font-family: sans-serif; padding: 20px; background-color: #f9f9f9; }
-        .container { max-width: 800px; margin: auto; }
-        .test-title { color: #333; border-bottom: 2px solid #007bff; padding-bottom: 5px; margin-top: 40px; }
-        .part-title { color: #007bff; margin-top: 20px; margin-bottom: 10px; font-weight: bold; font-size: 1.2em; }
-        .word-grid { display: flex; flex-wrap: wrap; gap: 15px; padding: 10px 0; min-height: 10px; }
-        
-        /* 卡片样式优化，增加点击时的缩放反馈 */
-        .card { width: 140px; padding: 20px 10px; border: 2px solid #007bff; border-radius: 10px; 
-                text-align: center; cursor: pointer; background: white; font-weight: bold; font-size: 18px; 
-                box-shadow: 0 2px 5px rgba(0,0,0,0.1); transition: transform 0.1s; user-select: none; }
-        .card:active { transform: scale(0.95); } /* 点击时稍微变小，手感更好 */
-        
-        /* 中文释义样式 */
+        .container { max-width: 900px; margin: auto; background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); }
+
+        /* 选项卡（横向排列）核心样式 */
+        .tabs { display: flex; gap: 10px; border-bottom: 2px solid #007bff; margin-bottom: 20px; overflow-x: auto; padding-bottom: 2px; }
+        .tab-btn { padding: 10px 20px; cursor: pointer; background: #e0f0ff; border: 2px solid transparent; border-bottom: none; border-radius: 8px 8px 0 0; font-size: 16px; font-weight: bold; color: #333; transition: 0.2s; white-space: nowrap; }
+        .tab-btn:hover { background: #cce0ff; }
+        .tab-btn.active { background: #007bff; color: white; border-color: #007bff; }
+
+        /* 控制内容显示与隐藏 */
+        .test-section { display: none; }
+        .test-section.active { display: block; animation: fadeIn 0.3s; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* 内部排版样式 */
+        .part-title { color: #007bff; margin-top: 15px; margin-bottom: 10px; font-weight: bold; font-size: 1.2em; border-bottom: 1px dashed #eee; padding-bottom: 5px; }
+        .word-grid { display: flex; flex-wrap: wrap; gap: 15px; padding: 10px 0 20px 0; }
+
+        /* 卡片样式 */
+        .card { width: 140px; padding: 20px 10px; border: 2px solid #007bff; border-radius: 10px;
+                text-align: center; cursor: pointer; background: white; font-weight: bold; font-size: 18px;
+                box-shadow: 0 2px 5px rgba(0,0,0,0.1); user-select: none; }
+        .card:active { transform: scale(0.95); }
         .meaning { color: #d9534f; font-size: 15px; margin-top: 8px; display: none; font-weight: normal; }
     </style>
 </head>
 <body>
-    <div class="container" id="app"></div>
+    <div class="container">
+        <div class="tabs" id="tabs-container"></div>
+        <div id="content-container"></div>
+    </div>
+
     <script>
-        // ==========================================
-        // 完整数据结构：Test 1 到 Test 6，每个含 Part 1-6
-        // ==========================================
         var content = {
             "Test 1": {
                 "Part 1": [
@@ -45,32 +56,71 @@
             "Test 6": { "Part 1": [], "Part 2": [], "Part 3": [], "Part 4": [], "Part 5": [], "Part 6": [] }
         };
 
-        var app = document.getElementById('app');
-        for (var t in content) {
-            app.innerHTML += '<h2 class="test-title">' + t + '</h2>';
-            for (var p in content[t]) {
-                app.innerHTML += '<h3 class="part-title">' + p + '</h3>';
+        // 【发音修复】：恢复你之前测试成功的、全局唯一的发音引擎
+        var audioPlayer = new Audio(); 
+        
+        var tabsContainer = document.getElementById('tabs-container');
+        var contentContainer = document.getElementById('content-container');
+        var isFirst = true;
+
+        // 遍历生成界面
+        for (var testName in content) {
+            // 1. 生成横向 Tab 按钮
+            var tabBtn = document.createElement('button');
+            tabBtn.className = 'tab-btn' + (isFirst ? ' active' : '');
+            tabBtn.innerText = testName;
+            tabBtn.setAttribute('data-target', testName);
+            tabsContainer.appendChild(tabBtn);
+
+            // 2. 生成对应的 Test 内容区块
+            var testSection = document.createElement('div');
+            testSection.className = 'test-section' + (isFirst ? ' active' : '');
+            testSection.id = 'sec-' + testName;
+
+            for (var partName in content[testName]) {
+                testSection.innerHTML += '<div class="part-title">' + partName + '</div>';
                 var grid = document.createElement('div');
                 grid.className = 'word-grid';
-                
-                content[t][p].forEach(function(item) {
-                    var div = document.createElement('div');
-                    div.className = 'card';
-                    div.innerHTML = '<div>' + item.word + '</div><div class="meaning">' + item.meaning + '</div>';
-                    
-                    // 核心成功逻辑：发音 + 切换中文显示
-                    div.onclick = function() {
-                        var audio = new Audio(item.audio);
-                        audio.play().catch(function(e) { console.error("播放被拦截", e); });
+
+                content[testName][partName].forEach(function(item) {
+                    var card = document.createElement('div');
+                    card.className = 'card';
+                    card.innerHTML = '<div>' + item.word + '</div><div class="meaning">' + item.meaning + '</div>';
+
+                    // 绑定点击事件：发音 + 显示中文
+                    card.onclick = function() {
+                        audioPlayer.src = item.audio;
+                        var playPromise = audioPlayer.play();
+                        if (playPromise !== undefined) {
+                            playPromise.catch(function(e) { console.log(e); });
+                        }
                         
                         var m = this.querySelector('.meaning');
                         m.style.display = (m.style.display === 'block') ? 'none' : 'block';
                     };
-                    grid.appendChild(div);
+                    grid.appendChild(card);
                 });
-                app.appendChild(grid);
+                testSection.appendChild(grid);
             }
+            contentContainer.appendChild(testSection);
+            isFirst = false;
         }
+
+        // 3. Tab 切换逻辑
+        var allTabs = document.querySelectorAll('.tab-btn');
+        var allSections = document.querySelectorAll('.test-section');
+
+        allTabs.forEach(function(btn) {
+            btn.onclick = function() {
+                // 清除所有高亮和显示状态
+                allTabs.forEach(function(t) { t.classList.remove('active'); });
+                allSections.forEach(function(s) { s.classList.remove('active'); });
+
+                // 激活被点击的项
+                this.classList.add('active');
+                document.getElementById('sec-' + this.getAttribute('data-target')).classList.add('active');
+            };
+        });
     </script>
 </body>
 </html>
