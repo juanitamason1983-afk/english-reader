@@ -42,6 +42,7 @@
     <div class="container">
         <div class="tabs" id="tabs-container"></div>
         <div id="content-container"></div>
+        <audio id="global-audio"></audio>
     </div>
 
     <script>
@@ -64,6 +65,7 @@
             "Test 6": { "Part 1": [], "Part 2": [], "Part 3": [], "Part 4": [], "Part 5": [], "Part 6": [] }
         };
 
+        var globalAudio = document.getElementById('global-audio');
         var tabsContainer = document.getElementById('tabs-container');
         var contentContainer = document.getElementById('content-container');
         var isFirst = true;
@@ -91,16 +93,22 @@
                     card.className = 'card';
                     card.innerHTML = '<div class="trans-btn">译</div><div>' + item.word + '</div><div class="meaning">' + item.meaning + '</div>';
 
-                    // 动作 1：点击卡片本体 -> 纯发音（使用最稳健的独立 Audio 对象写法）
+                    // 动作 1：点击卡片本体 -> 纯发音
                     card.onclick = function() {
-                        var audio = new Audio(item.audio);
-                        audio.play().catch(function(e) { console.log(e); });
+                        globalAudio.src = item.audio;
+                        globalAudio.play().catch(function(e) { console.log(e); });
                     };
 
                     // 动作 2：点击右上角“译”字 -> 纯翻译，不发音
                     var transBtn = card.querySelector('.trans-btn');
-                    transBtn.onclick = function(event) {
-                        event.stopPropagation(); // 阻止点击事件传递给底层卡片
+                    transBtn.onclick = function(e) {
+                        e = e || window.event;
+                        if (e.stopPropagation) {
+                            e.stopPropagation(); // 现代浏览器阻止冒泡
+                        } else {
+                            e.cancelBubble = true; // 老版本浏览器阻止冒泡
+                        }
+                        
                         var m = card.querySelector('.meaning');
                         m.style.display = (m.style.display === 'block') ? 'none' : 'block';
                     };
