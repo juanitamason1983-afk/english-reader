@@ -1,71 +1,53 @@
 <!DOCTYPE html>
-<html lang="zh-CN">
+<html>
 <head>
     <meta charset="UTF-8">
-    <title>Cici的智能点读库</title>
+    <title>Cici的点读库</title>
     <style>
-        body { font-family: sans-serif; padding: 20px; background-color: #f9f9f9; }
-        .container { max-width: 800px; margin: auto; }
-        .test-title { color: #333; border-bottom: 2px solid #007bff; padding-bottom: 5px; margin-top: 30px; }
-        .part-title { color: #007bff; margin-top: 20px; margin-bottom: 10px; font-weight: bold; }
-        .word-grid { display: flex; flex-wrap: wrap; gap: 15px; min-height: 20px; }
-        
-        .flip-card { background-color: transparent; width: 150px; height: 100px; perspective: 1000px; cursor: pointer; }
-        .flip-card-inner { position: relative; width: 100%; height: 100%; text-align: center; transition: transform 0.6s; transform-style: preserve-3d; }
-        .flip-card-inner.flipped { transform: rotateY(180deg); }
-        .flip-card-front, .flip-card-back { position: absolute; width: 100%; height: 100%; backface-visibility: hidden; display: flex; align-items: center; justify-content: center; border-radius: 8px; border: 1px solid #ddd; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
-        .flip-card-front { background: white; font-weight: bold; font-size: 18px; }
-        .flip-card-back { background: #007bff; color: white; transform: rotateY(180deg); padding: 10px; font-size: 16px; }
+        .word-grid { display: flex; flex-wrap: wrap; gap: 10px; padding: 20px; }
+        .card { width: 150px; padding: 20px; border: 2px solid #007bff; border-radius: 10px; 
+                text-align: center; cursor: pointer; background: white; font-weight: bold; }
+        .meaning { color: #555; font-size: 14px; margin-top: 5px; display: none; }
     </style>
 </head>
 <body>
-<div class="container" id="app"></div>
+    <div id="app"></div>
+    <script>
+        // 使用 https 协议的音频源以避免被浏览器拦截
+        var content = {
+            "Test 1": {
+                "Part 1": [
+                    { "word": "recommend", "meaning": "推荐", "audio": "https://dict.youdao.com/dictvoice?audio=recommend&type=2" }
+                ]
+            }
+        };
 
-<script>
-    var content = {
-        "Test 1": {
-            "Part 1": [
-                { "word": "recommend", "meaning": "推荐,建议", "audio": "https://dict.youdao.com/dictvoice?audio=recommend" },
-                { "word": "suitable", "meaning": "合适的,适宜的", "audio": "https://dict.youdao.com/dictvoice?audio=suitable" },
-                { "word": "directly", "meaning": "直接地", "audio": "https://dict.youdao.com/dictvoice?audio=directly" }
-            ],
-            "Part 2": [
-                { "word": "session", "meaning": "一节,一场", "audio": "https://dict.youdao.com/dictvoice?audio=session" }
-            ],
-            "Part 3": [], "Part 4": [], "Part 5": [], "Part 6": []
+        var app = document.getElementById('app');
+        for (var t in content) {
+            app.innerHTML += '<h1>' + t + '</h1>';
+            for (var p in content[t]) {
+                app.innerHTML += '<h3>' + p + '</h3>';
+                var grid = document.createElement('div');
+                grid.className = 'word-grid';
+                content[t][p].forEach(function(item) {
+                    var div = document.createElement('div');
+                    div.className = 'card';
+                    div.innerHTML = '<div>' + item.word + '</div><div class="meaning">' + item.meaning + '</div>';
+                    
+                    div.onclick = function() {
+                        // 1. 播放音频
+                        var audio = new Audio(item.audio);
+                        audio.play().catch(function(e) { console.error("播放被拦截", e); });
+                        
+                        // 2. 显示中文释义
+                        var m = this.querySelector('.meaning');
+                        m.style.display = (m.style.display === 'block') ? 'none' : 'block';
+                    };
+                    grid.appendChild(div);
+                });
+                app.appendChild(grid);
+            }
         }
-    };
-
-    var audioPlayer = new Audio();
-    var container = document.getElementById('app');
-
-    for (var testName in content) {
-        container.innerHTML += '<h2 class="test-title">' + testName + '</h2>';
-        for (var partName in content[testName]) {
-            container.innerHTML += '<h3 class="part-title">' + partName + '</h3>';
-            var grid = document.createElement('div');
-            grid.className = 'word-grid';
-            container.appendChild(grid); // 先把 grid 加进去
-            
-            content[testName][partName].forEach(function(item) {
-                var card = document.createElement('div');
-                card.className = 'flip-card';
-                card.innerHTML = `
-                    <div class="flip-card-inner">
-                        <div class="flip-card-front">${item.word}</div>
-                        <div class="flip-card-back">${item.meaning}</div>
-                    </div>
-                `;
-                // 绑定点击事件到 card 本身
-                card.onclick = function() {
-                    this.querySelector('.flip-card-inner').classList.toggle('flipped');
-                    audioPlayer.src = item.audio;
-                    audioPlayer.play();
-                };
-                grid.appendChild(card);
-            });
-        }
-    }
-</script>
+    </script>
 </body>
 </html>
